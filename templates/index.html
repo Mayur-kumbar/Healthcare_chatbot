@@ -3,97 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Healthcare AI Agent</title>
+    <title>Medical Diagnosis AI</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
             text-align: center;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        .container {
-            max-width: 500px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
         textarea {
-            width: 100%;
+            width: 80%;
             height: 100px;
-            margin-top: 10px;
-            resize: none;
+            margin-bottom: 10px;
         }
         button {
             padding: 10px 20px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
+            font-size: 16px;
             cursor: pointer;
-            margin-top: 10px;
         }
-        button:hover {
-            background: #218838;
+        .loading {
+            display: none;
+            font-weight: bold;
+            color: #ff6600;
         }
-        #result {
+        .result {
+            display: none;
             margin-top: 20px;
             text-align: left;
-        }
-        .result-section {
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 10px;
-        }
-        .error {
-            color: red;
-            font-weight: bold;
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 80%;
+            margin: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Healthcare AI Agent</h1>
-        <p>Enter symptoms to get a structured diagnosis:</p>
-        <textarea id="symptoms" placeholder="Enter symptoms..."></textarea>
-        <button onclick="getDiagnosis()">Diagnose</button>
-        <div id="result"></div>
+    <h1>Medical Diagnosis AI</h1>
+    <label for="symptoms"><strong>Enter Symptoms:</strong></label><br>
+    <textarea id="symptoms" placeholder="e.g., fever, headache, fatigue..."></textarea><br>
+
+    <label for="history"><strong>Enter Medical History:</strong></label><br>
+    <textarea id="history" placeholder="e.g., diabetes, hypertension, allergies..."></textarea><br>
+
+    <button onclick="getDiagnosis()">Get Diagnosis</button>
+
+    <p class="loading" id="loading">🔄 Processing your request, please wait...</p>
+
+    <div class="result" id="result">
+        <h2>Diagnosis</h2>
+        <p><strong>Condition:</strong> <span id="diagnosis"></span></p>
+        <p><strong>Possible Causes:</strong> <span id="causes"></span></p>
+        <p><strong>Recommended Tests:</strong> <span id="tests"></span></p>
+        <p><strong>Treatment & Lifestyle:</strong> <span id="treatment"></span></p>
     </div>
 
     <script>
         async function getDiagnosis() {
             const symptoms = document.getElementById("symptoms").value.trim();
-            if (!symptoms) {
-                alert("Please enter symptoms.");
+            const history = document.getElementById("history").value.trim();
+            const resultDiv = document.getElementById("result");
+            const loadingText = document.getElementById("loading");
+
+            if (!symptoms || !history) {
+                alert("⚠️ Please enter both symptoms and medical history.");
                 return;
             }
 
-            const response = await fetch("/diagnose", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ symptoms })
-            });
+            resultDiv.style.display = "none";
+            loadingText.style.display = "block";
 
-            const data = await response.json();
-            console.log(data);
+            try {
+                const response = await fetch("/diagnose", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ symptoms, history })
+                });
 
-            if (data.error) {
-                document.getElementById("result").innerHTML = `<p class="error">${data.error}</p>`;
-                return;
+                const data = await response.json();
+
+                document.getElementById("diagnosis").innerText = data.Diagnosis || "No diagnosis available.";
+                document.getElementById("causes").innerText = data.Causes || "Not available.";
+                document.getElementById("tests").innerText = data.Tests || "Not available.";
+                document.getElementById("treatment").innerText = data.Treatment || "Not available.";
+
+                resultDiv.style.display = "block";
+            } finally {
+                loadingText.style.display = "none";
             }
-
-            document.getElementById("result").innerHTML = `
-                <h3>Diagnosis:</h3>
-                <div class="result-section"><p>${data.diagnosis}</p></div>
-                <h3>Possible Causes:</h3>
-                <div class="result-section"><p>${data.possible_causes}</p></div>
-                <h3>Recommended Tests:</h3>
-                <div class="result-section"><p>${data.recommended_tests}</p></div>
-                <h3>Treatment Suggestions:</h3>
-                <div class="result-section"><p>${data.treatment_suggestions}</p></div>
-            `;
         }
     </script>
 </body>
