@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Healthcare AI Agent</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 500px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin-top: 10px;
+            resize: none;
+        }
+        button {
+            padding: 10px 20px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #218838;
+        }
+        #result {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .result-section {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Healthcare AI Agent</h1>
+        <p>Enter symptoms to get a structured diagnosis:</p>
+        <textarea id="symptoms" placeholder="Enter symptoms..."></textarea>
+        <button onclick="getDiagnosis()">Diagnose</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function getDiagnosis() {
+            const symptoms = document.getElementById("symptoms").value.trim();
+            if (!symptoms) {
+                alert("Please enter symptoms.");
+                return;
+            }
+
+            const response = await fetch("/diagnose", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ symptoms })
+            });
+
+            const data = await response.json();
+            console.log(data);
+
+            if (data.error) {
+                document.getElementById("result").innerHTML = `<p class="error">${data.error}</p>`;
+                return;
+            }
+
+            document.getElementById("result").innerHTML = `
+                <h3>Diagnosis:</h3>
+                <div class="result-section"><p>${data.diagnosis}</p></div>
+                <h3>Possible Causes:</h3>
+                <div class="result-section"><p>${data.possible_causes}</p></div>
+                <h3>Recommended Tests:</h3>
+                <div class="result-section"><p>${data.recommended_tests}</p></div>
+                <h3>Treatment Suggestions:</h3>
+                <div class="result-section"><p>${data.treatment_suggestions}</p></div>
+            `;
+        }
+    </script>
+</body>
+</html>
